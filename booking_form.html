@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Car Hire – Booking Form</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; display: flex; justify-content: center; padding: 40px 20px; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 40px; width: 100%; max-width: 550px; }
+    h2 { color: #1a3c5e; margin-bottom: 6px; }
+    p.sub { color: #666; font-size: 14px; margin-bottom: 24px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; margin-bottom: 4px; transition: border 0.2s; }
+    input:focus, select:focus { outline: none; border-color: #1a3c5e; }
+    .field { margin-bottom: 18px; }
+    .error { color: #e53935; font-size: 12px; min-height: 16px; display: block; }
+    .input-error { border-color: #e53935 !important; }
+    button { width: 100%; padding: 12px; background: #1a3c5e; color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+    button:hover { background: #274f77; }
+    #success-msg { display: none; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; border-radius: 6px; padding: 14px; margin-top: 16px; font-size: 14px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>🚗 Car Hire Booking</h2>
+  <p class="sub">Fill in all fields to complete your reservation.</p>
+
+  <form id="bookingForm" novalidate>
+
+    <div class="field">
+      <label for="customerName">Customer Name</label>
+      <input type="text" id="customerName" placeholder="e.g. John Mwangi" />
+      <span class="error" id="err-name"></span>
+    </div>
+
+    <div class="field">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="e.g. john@email.com" />
+      <span class="error" id="err-email"></span>
+    </div>
+
+    <div class="field">
+      <label for="vehicle">Vehicle Category</label>
+      <select id="vehicle">
+        <option value="">-- Select a vehicle --</option>
+        <option value="economy">Economy – KES 3,000/day</option>
+        <option value="suv">SUV – KES 6,500/day</option>
+        <option value="luxury">Luxury – KES 12,000/day</option>
+        <option value="minibus">Minibus – KES 9,000/day</option>
+      </select>
+      <span class="error" id="err-vehicle"></span>
+    </div>
+
+    <div class="field">
+      <label for="pickupDate">Pickup Date</label>
+      <input type="date" id="pickupDate" />
+      <span class="error" id="err-pickup"></span>
+    </div>
+
+    <div class="field">
+      <label for="returnDate">Return Date</label>
+      <input type="date" id="returnDate" />
+      <span class="error" id="err-return"></span>
+    </div>
+
+    <button type="submit">Confirm Booking</button>
+  </form>
+
+  <div id="success-msg">
+    ✅ Booking confirmed! A confirmation will be sent to your email.
+  </div>
+</div>
+
+<script>
+  // Set minimum date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('pickupDate').setAttribute('min', today);
+  document.getElementById('returnDate').setAttribute('min', today);
+
+  // Helper: show error
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.previousElementSibling.classList.add('input-error');
+  }
+
+  // Helper: clear error
+  function clearError(id) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.previousElementSibling.classList.remove('input-error');
+  }
+
+  // Email format validation using RegEx
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  document.getElementById('bookingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    let valid = true;
+
+    const name     = document.getElementById('customerName').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const vehicle  = document.getElementById('vehicle').value;
+    const pickup   = document.getElementById('pickupDate').value;
+    const returnD  = document.getElementById('returnDate').value;
+
+    // Clear all previous errors
+    ['err-name','err-email','err-vehicle','err-pickup','err-return'].forEach(clearError);
+
+    // Validate each field
+    if (!name) {
+      showError('err-name', 'Customer name is required.');
+      valid = false;
+    }
+
+    if (!email) {
+      showError('err-email', 'Email address is required.');
+      valid = false;
+    } else if (!isValidEmail(email)) {
+      showError('err-email', 'Please enter a valid email address.');
+      valid = false;
+    }
+
+    if (!vehicle) {
+      showError('err-vehicle', 'Please select a vehicle category.');
+      valid = false;
+    }
+
+    if (!pickup) {
+      showError('err-pickup', 'Pickup date is required.');
+      valid = false;
+    }
+
+    if (!returnD) {
+      showError('err-return', 'Return date is required.');
+      valid = false;
+    } else if (pickup && returnD <= pickup) {
+      showError('err-return', 'Return date must be after the pickup date.');
+      valid = false;
+    }
+
+    if (valid) {
+      document.getElementById('bookingForm').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>

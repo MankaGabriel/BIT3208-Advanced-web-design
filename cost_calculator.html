@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Car Hire – Live Cost Calculator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 40px 20px; }
+    .wrap { display: flex; gap: 24px; max-width: 900px; margin: 0 auto; flex-wrap: wrap; }
+    h2 { color: #1a3c5e; margin-bottom: 6px; }
+    p.sub { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 32px; flex: 1; min-width: 280px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; margin-bottom: 18px; }
+    input:focus, select:focus { outline: none; border-color: #1a3c5e; }
+
+    /* Vehicle card options */
+    .vehicle-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .v-card { border: 2px solid #ddd; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .v-card:hover { border-color: #1a3c5e; background: #f0f4f8; }
+    .v-card.selected { border-color: #1a3c5e; background: #e3eaf2; }
+    .v-card .icon { font-size: 28px; }
+    .v-card .name { font-weight: bold; font-size: 13px; color: #1a3c5e; margin-top: 4px; }
+    .v-card .rate { font-size: 12px; color: #666; }
+
+    /* Summary panel */
+    .summary-panel { background: #1a3c5e; color: #fff; border-radius: 10px; padding: 28px; }
+    .summary-panel h3 { margin-bottom: 20px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 10px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+    .summary-row .val { font-weight: bold; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 16px 0; }
+    .total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; }
+    .total-row .amount { color: #fdd835; }
+    .placeholder { color: rgba(255,255,255,0.5); font-style: italic; font-size: 13px; text-align: center; margin-top: 30px; }
+    .book-btn { display: block; margin-top: 24px; width: 100%; padding: 12px; background: #fdd835; color: #1a3c5e; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .book-btn:hover { background: #f9c900; }
+    .book-btn:disabled { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.4); cursor: not-allowed; }
+
+    /* Extras */
+    .extras { margin-bottom: 18px; }
+    .extras label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+    .extras input[type=checkbox] { width: auto; margin: 0; }
+  </style>
+</head>
+<body>
+
+<div style="max-width:900px; margin:0 auto 24px;">
+  <h2>🚗 Car Hire – Live Cost Calculator</h2>
+  <p class="sub">Select your options and the total updates instantly.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- LEFT: Input form -->
+  <div class="card" style="flex:1.2;">
+
+    <label>Select Vehicle Category</label>
+    <div class="vehicle-options" id="vehicleOptions">
+      <div class="v-card" data-vehicle="economy" data-rate="3000">
+        <div class="icon">🚙</div>
+        <div class="name">Economy</div>
+        <div class="rate">KES 3,000 / day</div>
+      </div>
+      <div class="v-card" data-vehicle="suv" data-rate="6500">
+        <div class="icon">🚐</div>
+        <div class="name">SUV</div>
+        <div class="rate">KES 6,500 / day</div>
+      </div>
+      <div class="v-card" data-vehicle="luxury" data-rate="12000">
+        <div class="icon">🏎️</div>
+        <div class="name">Luxury</div>
+        <div class="rate">KES 12,000 / day</div>
+      </div>
+      <div class="v-card" data-vehicle="minibus" data-rate="9000">
+        <div class="icon">🚌</div>
+        <div class="name">Minibus</div>
+        <div class="rate">KES 9,000 / day</div>
+      </div>
+    </div>
+
+    <label for="pickupDate">Pickup Date</label>
+    <input type="date" id="pickupDate" />
+
+    <label for="returnDate">Return Date</label>
+    <input type="date" id="returnDate" />
+
+    <div class="extras">
+      <label style="font-weight:bold; margin-bottom:10px; display:block;">Optional Extras</label>
+      <label><input type="checkbox" id="extraDriver" value="500"> Additional Driver – KES 500/day</label>
+      <label><input type="checkbox" id="extraInsurance" value="800"> Full Insurance Cover – KES 800/day</label>
+      <label><input type="checkbox" id="extraGPS" value="300"> GPS Navigation – KES 300/day</label>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Live summary panel -->
+  <div class="summary-panel" style="flex:0.8; min-width:260px; align-self:start;">
+    <h3>📋 Booking Summary</h3>
+    <div id="summaryContent">
+      <p class="placeholder">Select a vehicle and dates to see your estimated cost.</p>
+    </div>
+    <button class="book-btn" id="bookBtn" disabled>Proceed to Book</button>
+  </div>
+
+</div>
+
+<script>
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('pickupDate').setAttribute('min', today);
+  document.getElementById('returnDate').setAttribute('min', today);
+
+  let selectedVehicle = null;
+  let selectedRate    = 0;
+
+  // Vehicle card click handler
+  document.querySelectorAll('.v-card').forEach(card => {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.v-card').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedVehicle = this.dataset.vehicle;
+      selectedRate    = parseInt(this.dataset.rate);
+      recalculate();
+    });
+  });
+
+  // Date and extras change handlers
+  document.getElementById('pickupDate').addEventListener('change', recalculate);
+  document.getElementById('returnDate').addEventListener('change', recalculate);
+  document.querySelectorAll('.extras input').forEach(cb => cb.addEventListener('change', recalculate));
+
+  function recalculate() {
+    const pickup  = document.getElementById('pickupDate').value;
+    const returnD = document.getElementById('returnDate').value;
+    const content = document.getElementById('summaryContent');
+    const btn     = document.getElementById('bookBtn');
+
+    if (!selectedVehicle || !pickup || !returnD || returnD <= pickup) {
+      content.innerHTML = '<p class="placeholder">Select a vehicle and valid dates to see your estimate.</p>';
+      btn.disabled = true;
+      return;
+    }
+
+    // Calculate days
+    const p    = new Date(pickup);
+    const r    = new Date(returnD);
+    const days = Math.round((r - p) / (1000 * 60 * 60 * 24));
+
+    // Calculate extras
+    let extrasTotal = 0;
+    let extrasLines = '';
+    document.querySelectorAll('.extras input:checked').forEach(cb => {
+      const cost = parseInt(cb.value) * days;
+      extrasTotal += cost;
+      extrasLines += `
+        <div class="summary-row">
+          <span>${cb.parentElement.textContent.trim().split(' –')[0]}</span>
+          <span class="val">KES ${cost.toLocaleString()}</span>
+        </div>`;
+    });
+
+    const baseTotal  = selectedRate * days;
+    const grandTotal = baseTotal + extrasTotal;
+
+    // Vehicle display names
+    const names = { economy:'Economy', suv:'SUV', luxury:'Luxury', minibus:'Minibus' };
+
+    content.innerHTML = `
+      <div class="summary-row"><span>Vehicle</span><span class="val">${names[selectedVehicle]}</span></div>
+      <div class="summary-row"><span>Pickup</span><span class="val">${formatDate(pickup)}</span></div>
+      <div class="summary-row"><span>Return</span><span class="val">${formatDate(returnD)}</span></div>
+      <div class="summary-row"><span>Duration</span><span class="val">${days} day${days>1?'s':''}</span></div>
+      <div class="summary-row"><span>Daily Rate</span><span class="val">KES ${selectedRate.toLocaleString()}</span></div>
+      <div class="summary-row"><span>Base Cost</span><span class="val">KES ${baseTotal.toLocaleString()}</span></div>
+      ${extrasLines ? '<hr class="divider">' + extrasLines : ''}
+      <hr class="divider">
+      <div class="total-row">
+        <span>Total</span>
+        <span class="amount">KES ${grandTotal.toLocaleString()}</span>
+      </div>`;
+
+    btn.disabled = false;
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-KE', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  document.getElementById('bookBtn').addEventListener('click', function() {
+    alert('✅ Redirecting to booking confirmation form...');
+  });
+</script>
+</body>
+</html>

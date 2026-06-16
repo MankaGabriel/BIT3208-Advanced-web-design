@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Car Hire – Customer Registration</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; display: flex; justify-content: center; padding: 40px 20px; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 40px; width: 100%; max-width: 480px; }
+    h2 { color: #1a3c5e; margin-bottom: 6px; }
+    p.sub { color: #666; font-size: 14px; margin-bottom: 24px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; transition: border 0.2s; }
+    input:focus { outline: none; border-color: #1a3c5e; }
+    .field { margin-bottom: 18px; }
+    .error { color: #e53935; font-size: 12px; min-height: 16px; display: block; margin-top: 4px; }
+
+    /* Strength bar */
+    #strength-bar-wrap { height: 8px; background: #e0e0e0; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    #strength-bar { height: 100%; width: 0%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+    #strength-label { font-size: 12px; margin-top: 4px; font-weight: bold; }
+
+    /* Rules checklist */
+    .rules { margin-top: 10px; list-style: none; padding: 0; }
+    .rules li { font-size: 12px; color: #999; margin-bottom: 4px; transition: color 0.2s; }
+    .rules li::before { content: '✗ '; color: #e53935; }
+    .rules li.pass { color: #2e7d32; }
+    .rules li.pass::before { content: '✓ '; color: #2e7d32; }
+
+    button { width: 100%; padding: 12px; background: #1a3c5e; color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+    button:hover { background: #274f77; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>🚗 Customer Registration</h2>
+  <p class="sub">Create your Car Hire account below.</p>
+
+  <form id="regForm" novalidate>
+
+    <div class="field">
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" placeholder="e.g. Jane Wambui" />
+    </div>
+
+    <div class="field">
+      <label for="regEmail">Email Address</label>
+      <input type="email" id="regEmail" placeholder="e.g. jane@email.com" />
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter a strong password" autocomplete="new-password" />
+      <div id="strength-bar-wrap"><div id="strength-bar"></div></div>
+      <div id="strength-label"></div>
+      <ul class="rules">
+        <li id="rule-len">At least 8 characters</li>
+        <li id="rule-upper">At least one uppercase letter (A–Z)</li>
+        <li id="rule-number">At least one number (0–9)</li>
+        <li id="rule-special">At least one special character (!@#$%^&*)</li>
+      </ul>
+    </div>
+
+    <div class="field">
+      <label for="confirmPwd">Confirm Password</label>
+      <input type="password" id="confirmPwd" placeholder="Re-enter your password" autocomplete="new-password" />
+      <span class="error" id="err-confirm"></span>
+    </div>
+
+    <button type="submit" id="submitBtn" disabled>Create Account</button>
+  </form>
+</div>
+
+<script>
+  const pwdInput    = document.getElementById('password');
+  const confirmPwd  = document.getElementById('confirmPwd');
+  const bar         = document.getElementById('strength-bar');
+  const label       = document.getElementById('strength-label');
+  const submitBtn   = document.getElementById('submitBtn');
+
+  const rules = {
+    len:     { el: document.getElementById('rule-len'),     fn: v => v.length >= 8 },
+    upper:   { el: document.getElementById('rule-upper'),   fn: v => /[A-Z]/.test(v) },
+    number:  { el: document.getElementById('rule-number'),  fn: v => /[0-9]/.test(v) },
+    special: { el: document.getElementById('rule-special'), fn: v => /[!@#$%^&*]/.test(v) },
+  };
+
+  const levels = [
+    { label: 'Very Weak', color: '#e53935', width: '20%' },
+    { label: 'Weak',      color: '#fb8c00', width: '40%' },
+    { label: 'Fair',      color: '#fdd835', width: '60%' },
+    { label: 'Strong',    color: '#43a047', width: '80%' },
+    { label: 'Very Strong', color: '#1a3c5e', width: '100%' },
+  ];
+
+  pwdInput.addEventListener('input', function() {
+    const val   = this.value;
+    let score   = 0;
+    let allPass = true;
+
+    // Check each rule
+    for (const key in rules) {
+      const passes = rules[key].fn(val);
+      rules[key].el.classList.toggle('pass', passes);
+      if (passes) score++;
+      else allPass = false;
+    }
+
+    // Update strength bar
+    if (val.length === 0) {
+      bar.style.width = '0%';
+      label.textContent = '';
+    } else {
+      const lvl = levels[score - 1] || levels[0];
+      bar.style.width = lvl.width;
+      bar.style.background = lvl.color;
+      label.textContent = 'Strength: ' + lvl.label;
+      label.style.color = lvl.color;
+    }
+
+    checkEnableSubmit(allPass);
+  });
+
+  confirmPwd.addEventListener('input', function() {
+    const err = document.getElementById('err-confirm');
+    if (this.value && this.value !== pwdInput.value) {
+      err.textContent = 'Passwords do not match.';
+    } else {
+      err.textContent = '';
+    }
+    checkEnableSubmit();
+  });
+
+  function checkEnableSubmit() {
+    const allRulesPass = Object.values(rules).every(r => r.fn(pwdInput.value));
+    const matches = confirmPwd.value === pwdInput.value && confirmPwd.value !== '';
+    submitBtn.disabled = !(allRulesPass && matches);
+  }
+
+  document.getElementById('regForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('✅ Account created successfully! Welcome to Car Hire.');
+  });
+</script>
+</body>
+</html>
